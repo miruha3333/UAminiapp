@@ -3776,62 +3776,14 @@ async function loadNews() {
 
   try {
     let posts = [];
-
-    // Якщо вказаний новий український Telegram-канал, парсимо публічну стрічку напряму
-    if (UA_NEWS_CHANNEL && UA_NEWS_CHANNEL.trim() !== "") {
-      try {
-        const resp = await fetch(`https://api.allorigins.win/raw?url=${encodeURIComponent('https://t.me/s/' + UA_NEWS_CHANNEL)}`);
-        if (resp.ok) {
-          const html = await resp.text();
-          const rawMessages = html.split('<div class="tgme_widget_message_wrap');
-          for (let i = 1; i < rawMessages.length; i++) {
-            const block = rawMessages[i];
-            const linkMatch = block.match(/href="(https:\/\/t\.me\/[^/]+\/\d+)"/);
-            if (!linkMatch) continue;
-            const postLink = linkMatch[1];
-            const msgId = postLink.split("/").pop();
-
-            let imgUrl = "";
-            const bgMatch = block.match(/background-image:\s*url\('([^']+)'\)/);
-            if (bgMatch) imgUrl = bgMatch[1];
-
-            let text = "";
-            const textMatch = block.match(/<div class="tgme_widget_message_text[^>]*>([\s\S]*?)<\/div>/);
-            if (textMatch) {
-              text = textMatch[1].replace(/<br\s*\/?>/gi, "\n").replace(/<\/?[^>]+(>|$)/g, "").trim();
-            }
-
-            if (!text && !imgUrl) continue;
-
-            const lines = text.split("\n").map(l => l.trim()).filter(Boolean);
-            let title = lines[0] || "Новина каналу";
-            if (title.length > 130) title = title.slice(0, 127) + "...";
-
-            let dateStr = "Свіжа новина";
-            const timeMatch = block.match(/<time datetime="([^"]+)"/);
-            if (timeMatch) {
-              try {
-                const d = new Date(timeMatch[1]);
-                dateStr = d.toLocaleDateString("uk-UA", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
-              } catch (_) {}
-            }
-
-            posts.push({ id: msgId, title, link: postLink, image: imgUrl, date: dateStr });
-          }
-          posts = posts.reverse().slice(0, 25);
-        }
-      } catch (_) {}
-    }
-
-    // Якщо свій канал ще не вказано, беремо дані з API
-    if (!posts.length) {
-      const res = await fetch(`${API_BASE}/api/news`);
+    const res = await fetch(`${API_BASE}/api/news`);
+    if (res.ok) {
       const data = await res.json();
-      posts = data.news || [];
+      posts = Array.isArray(data?.news) ? data.news : [];
     }
 
     if (!posts.length) {
-      if (container) container.innerHTML = '<div class="empty">У каналі поки немає новин</div>';
+      if (container) container.innerHTML = '<div class="empty">У каналі поки немає новин або він налаштований як приватний</div>';
       return;
     }
 
