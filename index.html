@@ -1449,10 +1449,10 @@ const tg = window.Telegram?.WebApp;
 tg?.ready();
 tg?.expand();
 
-// Базовий сервер Cloudflare (швидкий, без холодного старту)
-const API_BASE = "https://uaminiapp2.sergvolk504.workers.dev";
-
-// Якщо вже створили новий український Telegram-канал — впишіть сюди його юзернейм без @
+// Автоматичне визначення хоста: працює як на Pages, так і локально або на воркері
+const API_BASE = window.location.origin.includes("workers.dev")
+  ? window.location.origin
+  : "https://uaminiapp2.sergvolk504.workers.dev";
 // Наприклад: const UA_NEWS_CHANNEL = "nhl_ukraine";
 const UA_NEWS_CHANNEL = "icing_ua";  
 
@@ -1546,6 +1546,7 @@ let currentBoxscoreData = null;
 let boxSortKey = {};
 let boxSortAsc = {};
 
+// 2024 — останній фактично проведений драфт
 let currentDraftYear = "2026";
 let currentDraftRound = "all";
 let cachedDraftPicks = [];
